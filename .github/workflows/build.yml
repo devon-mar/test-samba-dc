@@ -1,0 +1,32 @@
+---
+name: Build
+
+"on":
+  push:
+  workflow_dispatch:
+
+jobs:
+  container:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Can't use regular docker build since samba needs to be privileged.
+      - name: Run setup.sh
+        run: docker run --privileged --name sambadcbuild --mount type=bind,source="$(pwd)/setup.sh",target=/root/setup.sh alpine:latest /bin/sh /root/setup.sh
+
+      - name: Commit
+        run: docker commit -c 'ENTRYPOINT samba -i' sambadcbuild ghcr.io/devon-mar/test-samba-dc:latest
+
+      - name: Push to ghcr
+        run: docker push ghcr.io/devon-mar/test-samba-dc:latest
