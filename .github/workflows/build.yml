@@ -21,12 +21,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install ldap-utils
+        run: sudo apt-get install ldap-utils
+
       # Can't use regular docker build since samba needs to be privileged.
       - name: Run setup.sh
         run: docker run --privileged --name sambadcbuild --mount type=bind,source="$(pwd)/setup.sh",target=/root/setup.sh alpine:latest /bin/sh /root/setup.sh
 
       - name: Commit
         run: docker commit -c 'ENTRYPOINT samba -i' sambadcbuild ghcr.io/devon-mar/test-samba-dc:latest
+
+      - name: Test
+        run: |
+          docker run --rm -p 389:389 sambadcbuild
+          ./test.sh
 
       - name: Push to ghcr
         run: docker push ghcr.io/devon-mar/test-samba-dc:latest
