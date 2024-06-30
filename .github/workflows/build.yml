@@ -5,6 +5,9 @@ name: Build
   push:
   workflow_dispatch:
 
+env:
+  CONTAINER_TAG: ghcr.io/devon-mar/test-samba-dc:latest
+
 jobs:
   container:
     runs-on: ubuntu-latest
@@ -29,12 +32,12 @@ jobs:
         run: docker run --privileged --name sambadcbuild --mount type=bind,source="$(pwd)/setup.sh",target=/root/setup.sh alpine:latest /bin/sh /root/setup.sh
 
       - name: Commit
-        run: docker commit -c 'ENTRYPOINT samba -i' sambadcbuild ghcr.io/devon-mar/test-samba-dc:latest
+        run: docker commit -c 'ENTRYPOINT samba -i' sambadcbuild "$CONTAINER_TAG"
 
       - name: Test
         run: |
-          docker run --rm -p 389:389 sambadcbuild
+          docker run -d --rm -p 389:389 "$CONTAINER_TAG"
           ./test.sh
 
       - name: Push to ghcr
-        run: docker push ghcr.io/devon-mar/test-samba-dc:latest
+        run: docker push "$CONTAINER_TAG"
