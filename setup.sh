@@ -12,6 +12,7 @@ samba-tool domain provision \
   --domain=EXAMPLE \
   --adminpass=ohfie3Uahe
 sed -i '/\[global\]/a ldap server require strong auth = no' /etc/samba/smb.conf
+sed -i '/\[global\]/a log level = 3' /etc/samba/smb.conf
 
 samba-tool user create user1 Password1
 samba-tool user create user2 Password2
